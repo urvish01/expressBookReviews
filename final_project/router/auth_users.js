@@ -16,36 +16,38 @@ const isValid = (username) => { //returns boolean
 }
 
 const authenticatedUser = (username, password) => { //returns boolean
-    const authenticatedUser = (username, password) => {
-        if (isValid) {
-            let validUserData = users.filter((user) => {
-                return (user.username == username && user.password === password)
-            });
-            if (validUserData.length > 0) return true;
-            else return false;
-        }
+    if (isValid) {
+        let validUserData = users.filter((user) => {
+            return (user.username == username && user.password === password)
+        });
+        if (validUserData.length > 0) return true;
+        else return false;
     }
 }
 
 //only registered users can login
 regd_users.post("/login", (req, res) => {
-    let username = req.body.username;
-    let password = req.body.password;
+  let username = req.body.username;
+  let password = req.body.password;
+  console.log("🚀 ~ file: general.js:5 ~ users:", users)
 
-    if (!username || !password) return res.status(400).json({ message: "Please add username or password" });
+  if (!username || !password) {
+      return res.status(400).json({ message: "Please provide both username and password" });
+  }
 
-    if (authenticatedUser(username, password)) {
-        let accessToken = jwt.sign({
-            data: password
-        }, 'access', { expiresIn: 60 * 60 });
+  if (authenticatedUser(username, password)) {
+      let accessToken = jwt.sign({
+          data: password
+      }, 'access', { expiresIn: 60 * 60 });
 
-        req.session.authorization = {
-            accessToken, username
-        }
-        return res.status(200).json({ message: "User logged in successfully" });
-    }
-
-    return res.status(500).json({ message: "Internal server error" })
+      req.session.authorization = {
+          accessToken,
+          username
+      }
+      return res.status(200).json({ message: "User logged in successfully" });
+  } else {
+      return res.status(401).json({ message: "Invalid username or password" });
+  }
 });
 
 // Add a book review
@@ -58,7 +60,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
         let username = req.session.authorization.username;
         if (reviewQ) booksReviewData.reviews[username] = reviewQ;
         books[bnData] = booksReviewData;
-       return res.status(200).json({ message: "Book review added/updated" });
+       return res.status(200).json({ message: `Book review added/updated review is :- ${reviewQ}` });
     }
 
     return res.status(404).json({ message: "Data not Found"})
